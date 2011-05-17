@@ -230,6 +230,8 @@ class DatabaseTesting(unittest.TestCase):
         
         c.execute('''INSERT INTO players
                   VALUES ("Berin", "abc123", 1)''')
+        c.execute('''INSERT INTO players
+                  VALUES ("Matt", "ffswtf", 2)''')
         
         self.db.conn.commit()
         
@@ -238,6 +240,22 @@ class DatabaseTesting(unittest.TestCase):
         self.assertEqual(username, "Berin")
         self.assertEqual(passhash, "abc123")
         self.assertEqual(puppetID, 1)
+
+        # Try getting the players as an iterator.
+
+        users = self.db.getUsers()
+        user = users.next()
+
+        self.assertEqual(user[0], "Berin")
+        self.assertEqual(user[1], "abc123")
+        self.assertEqual(user[2], 1)      
+
+        user = users.next()
+
+        self.assertEqual(user[0], "Matt")
+        self.assertEqual(user[1], "ffswtf")
+        self.assertEqual(user[2], 2)
+        
 
 
     def testAPIExits(self):

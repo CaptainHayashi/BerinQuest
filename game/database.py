@@ -406,6 +406,17 @@ class DatabaseBackend (object):
         self.conn.commit()
 
 
+    def getUsers(self):
+        """Generate an iterator that yields (username, passhash, puppetID) tuples 
+        for each users in the database."""
+
+        c = self.conn.cursor()
+        
+        for row in c.execute('''SELECT players.username, players.passhash, players.puppetid
+                               FROM players''').fetchall():   
+             yield (row[0], row[1], row[2])
+
+
     def getUser(self, identity):
         """Retrieve the user with identity identity (this is currently 
         equivalent to their username).

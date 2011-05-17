@@ -65,6 +65,10 @@ class BerinObject:
         if attr in self.attributes.keys():
             del self.attribues[attr]
 
+    def getWorld(self):
+        """Returns the world the object is in."""
+        return self.world
+
     def getLocation(self):
         return self.loc
 
@@ -89,6 +93,19 @@ class BerinObject:
 
     def getContents(self):
         return self.contents
+
+    def getItemMatches(self, identifier):
+        """Returns a list of items in this item whose names match the
+        given identifier."""
+
+        result = []
+
+        p = re.compile(identifier)
+        for i in self.contents:
+            if p.match(i.getAttribute('oshort')):
+                result.append(i)
+
+        return result
     
     def getItem(self, identifier, n=None):
         n = n or "1"
@@ -175,7 +192,7 @@ class Puppet(BerinObject):
     def deregisterClient(self):
         self.client = None
 
-    def forceQuit(qFlag=None):
+    def forceQuit(self, qFlag=None):
         self._quitFlag = qFlag or self._quitFlag
         self.client.transport.loseConnection()
 

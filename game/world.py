@@ -5,6 +5,7 @@ from network import ArgFactory, UserConnection
 from objects import BerinObject, Room, Puppet, itemTypes
 from database import DatabaseBackend
 import pickle
+import re
 
 # World class, defines each world
 class World:
@@ -290,10 +291,23 @@ class World:
         """Check to see if the user details given match with the 
         user records in the database."""
         
-        chkUsername, chkPasshash, chkPuppetID = self.db.getUser (username)
+        chkUsername, chkPasshash, chkPuppetID = self.db.getUser(username)
         
         if (chkUsername == username
             and chkPasshash == passhash):
             return chkPuppetID
         else:
             return None
+
+    def getUsernameMatches(self, username):
+        """Returns a list of all usernames in the database matching
+        the initial username fragment supplied."""
+
+        result = []
+
+        p = re.compile(username)
+        for i in self.db.getUsers():
+            if p.match(i[0]):
+                result.append(i)
+
+        return result

@@ -1,6 +1,8 @@
 # Distributed under the terms of the GNU GPLv3
 # Copyright 2010 Berin Smaldon
 
+import re
+
 class Parser:
     def __init__(self, puppet):
         self.puppet = puppet
@@ -32,6 +34,39 @@ class Parser:
         else:
             return None
 
+    def cmd_kick(self, kick, username, reason='No reason'):
+        """Kick a user from the server, with an optional reason."""
+        
+        if username is None: # Something went badly wrong
+            self.cmd_idiot()
+            return
+
+        print username
+
+        matches = self.puppet.getWorld().getUsernameMatches(username)
+
+        if len(matches) > 1:
+            self.puppet.display("Ambiguous target.")
+            self.puppet.display("Possibilities: " + ", \
+            ".join(matches))
+            return
+        elif len(matches) < 1:
+            self.puppet.display("No such user.")
+            return
+
+        # Get the puppet belonging to this user
+        puppetid = matches[0][2] # Remove these magic numbers later?
+        
+        puppet = self.puppet.getWorld().getByID(puppetid)
+
+        if puppet is None:
+            self.puppet.display("Something went badly wrong.")
+            return
+
+        puppet.display("You have been kicked (" + reason + ")")
+        puppet.forceQuit();
+
+
     def cmd_idiot(self, *command):
         # Check puppet's exits
 
@@ -59,21 +94,27 @@ class Parser:
     def cmd_look(self, *command):
         command = list(command)
         if len(command) < 2:
+            # Only the command given
+            # Describe the puppet's current location.
             l = self.puppet.getLocation()
             if l == None:
                 self.puppet.display("You are somehow trapped in the void")
-                return
-            self.puppet.display("\n".join(
-                # Unicode has a nasty tendency to get in here
-                # Uncomment the 2 following comments in times of type errors
-                #map(lambda x: str(type(x)),
-                [l.getAttribute('ishort'),
-                l.getAttribute('idesc'),
-                l.renderContents(),
-                "Exits: "+l.renderExits()]))
-                #)
-            #self.cmd_idiot()
+            else:
+                self.puppet.display("\n".join(
+                    # Unicode has a nasty tendency to get in here
+                    # Uncomment the 2 following comments in times
+                    # of type errors
+                    #map(lambda x: str(type(x)),
+                    [l.getAttribute('ishort'),
+                     l.getAttribute('idesc'),
+                     l.renderContents(),
+                     "Exits: "+l.renderExits()]
+                    ))
+                    #)
+                    #self.cmd_idiot()
             return
+
+        # The command and one or more other words given?
 
         t = None
         _lhere = self.puppet.getLocation() != None
@@ -85,9 +126,14 @@ class Parser:
             _lhere = False
         else:
             command = command[1:]
-        if len(command) == 2:
+
+        # Check regexes to see if it's got a number on the end of it.
+        # If so, the number is an index in case multiple 
+        num_match = re.match(".+ (\d)+", " ".join(command));
+
+        if num_match:
             try:
-                n = int(command.pop(1))
+                n = int(command.pop(-1))
             except ValueError:
                 self.cmd_idiot()
                 return None
@@ -96,6 +142,9 @@ class Parser:
                 return None
         else:
             n = 1
+        if len(command) > 1:
+            command = [" ".join(command)];
+        print command
         if len(command) != 1:
             self.cmd_idiot()
             return None
